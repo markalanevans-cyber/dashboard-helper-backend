@@ -9,115 +9,167 @@ const PORT = process.env.PORT || 3000;
 app.use(cors());
 app.use(express.json());
 
-app.get('/', (req, res) => {
-  res.send('Dashboard Helper backend is running');
-});
-
-app.get('/vehicle', async (req, res) => {
-  const registration = (req.query.registration || '')
+function normalizeRegistration(value) {
+  return (value || '')
     .toString()
     .trim()
     .toUpperCase()
-    .replace(/\s+/g, '');
+    .replace(/[^A-Z0-9]/g, '');
+}
 
-  if (!registration) {
-    return res.status(400).json({
-      error: 'Missing registration query parameter',
-    });
+function getRegistrationFromRequest(req) {
+  return normalizeRegistration(
+    req.query.registration ||
+      req.body.registration ||
+      req.body.registrationNumber ||
+      ''
+  );
+}
+
+function safeValue(value, fallback = 'Unknown') {
+  const text = (value ?? '').toString().trim();
+  return text.isEmpty ? fallback : text;
+}
+
+async function fetchDvlaVehicle(registration) {
+  const apiKey = (process.env.DVLA_API_KEY || '').trim();
+
+  if (!apiKey) {
+    const error = new Error('DVLA_API_KEY is missing from the environment');
+    error.statusCode = 500;
+    throw error;
   }
 
-  const dvlaApiKey = (process.env.DVLA_API_KEY || '').trim();
-
-  if (!dvlaApiKey) {
-    return res.status(500).json({
-      error: 'DVLA_API_KEY is missing from the environment',
-    });
-  }
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
 
   try {
-    const dvlaResponse = await fetch(
+    const response = await fetch(
       'https://driver-vehicle-licensing.api.gov.uk/vehicle-enquiry/v1/vehicles',
       {
         method: 'POST',
         headers: {
-          'x-api-key': dvlaApiKey,
+          'x-api-key': apiKey,
           'Content-Type': 'application/json',
+          Accept: 'application/json',
         },
         body: JSON.stringify({
           registrationNumber: registration,
         }),
+        signal: controller.signal,
       }
     );
 
-    const rawText = await dvlaResponse.text();
+    const rawText = await response.text();
 
-    let dvlaData = {};
+    let data = {};
     try {
-      dvlaData = rawText ? JSON.parse(rawText) : {};
+      data = rawText ? JSON.parse(rawText) : {};
     } catch (_) {
-      dvlaData = {};
+      data = {};
     }
 
-    if (!dvlaResponse.ok) {
-      return res.status(dvlaResponse.status).json({
-        error: 'DVLA lookup failed',
-        status: dvlaResponse.status,
-        details: dvlaData,
+    if (!response.ok) {
+      const error = new Error('DVLA lookup failed');
+      error.statusCode = response.status;
+      error.details = data;
+      throw error;
+    }
+
+    return data;
+  } finally {
+    clearTimeout(timeout);
+  }
+}
+
+function mapVehicleResponse(registration, dvlaData) {
+  const year =
+    safeValue(dvlaData.yearOfManufacture, '') ||
+    (safeValue(dvlaData.monthOfFirstRegistration, '').length >= 4
+      ? safeValue(dvlaData.monthOfFirstRegistration, '').substring(0, 4)
+      : 'Unknown');
+
+  return {
+    registration: safeValue(dvlaData.registrationNumber, registration),
+    make: safeValue(dvlaData.make),
+    model: 'Model unavailable',
+    yearOfManufacture: year,
+    fuelType: safeValue(dvlaData.fuelType),
+    engineCapacity: safeValue(dvlaData.engineCapacity),
+    motStatus: safeValue(dvlaData.motStatus),
+    motExpiryDate: safeValue(dvlaData.motExpiryDate),
+    taxStatus: safeValue(dvlaData.taxStatus),
+    taxDueDate: safeValue(dvlaData.taxDueDate),
+    colour: safeValue(dvlaData.colour),
+  };
+}
+
+app.get('/', (req, res) => {
+  res.send('Dashboard Helper backend is running');
+});
+
+app.get('/health', (req, res) => {
+  res.json({
+    ok: true,
+    uptime: Math.round(process.uptime()),
+    timestamp: new Date().toISOString(),
+  });
+});
+
+async function handleVehicleLookup(req, res) {
+  try {
+    const registration = getRegistrationFromRequest(req);
+
+    if (!registration) {
+      return res.status(400).json({
+        error: 'Registration is required',
       });
     }
 
-    return res.json({
-      registration: dvlaData.registrationNumber || registration,
-      make: dvlaData.make || '',
-      model: dvlaData.model || '',
-      colour: dvlaData.colour || '',
-      fuelType: dvlaData.fuelType || '',
-      yearOfManufacture: dvlaData.yearOfManufacture || '',
-      engineCapacity: dvlaData.engineCapacity || '',
-      co2Emissions: dvlaData.co2Emissions || '',
-      euroStatus: dvlaData.euroStatus || '',
-      typeApproval: dvlaData.typeApproval || '',
-      wheelplan: dvlaData.wheelplan || '',
-      revenueWeight: dvlaData.revenueWeight || '',
-      taxStatus: dvlaData.taxStatus || '',
-      taxDueDate: dvlaData.taxDueDate || '',
-      motStatus: dvlaData.motStatus || '',
-      motExpiryDate: dvlaData.motExpiryDate || '',
-      ulezStatus: '',
-      raw: dvlaData,
-    });
+    const dvlaData = await fetchDvlaVehicle(registration);
+    const vehicle = mapVehicleResponse(registration, dvlaData);
+
+    return res.json(vehicle);
   } catch (error) {
+    const isTimeout = error.name === 'AbortError';
+
     console.error('Vehicle lookup failed:', error);
-    return res.status(500).json({
-      error: 'Vehicle lookup failed',
-      details: error.message,
+
+    return res.status(isTimeout ? 504 : error.statusCode || 500).json({
+      error: isTimeout ? 'DVLA request timed out' : error.message || 'Lookup failed',
+      details: error.details || error.message || 'Unknown error',
     });
   }
-});
+}
+
+app.get('/vehicle', handleVehicleLookup);
+app.post('/vehicle', handleVehicleLookup);
 
 app.get('/tyre-pressure', (req, res) => {
-  const registration = (req.query.registration || '')
-    .toString()
-    .trim()
-    .toUpperCase()
-    .replace(/\s+/g, '');
+  const registration = getRegistrationFromRequest(req);
 
   if (!registration) {
     return res.status(400).json({
-      error: 'Missing registration query parameter',
+      error: 'Registration is required',
     });
   }
 
   return res.json({
     registration,
     vehicleLabel: registration,
-    frontPsi: '36 PSI',
-    rearPsi: '38 PSI',
-    frontBar: '2.5 bar',
-    rearBar: '2.6 bar',
+    frontPsi: 'Check vehicle label',
+    rearPsi: 'Check vehicle label',
+    frontBar: 'Door sticker / handbook',
+    rearBar: 'Door sticker / handbook',
     loadNote:
-      'Placeholder values for now. Replace this route with a real tyre-pressure data source. Always confirm against the vehicle door-jamb sticker or handbook before inflating.',
-    source: 'Placeholder backend hook',
+      'Check the driver door-jamb sticker, fuel flap label, or vehicle handbook for correct tyre pressures.',
+    source: 'Manual guidance',
+  });
+});
+
+app.use((req, res) => {
+  res.status(404).json({
+    error: 'Route not found',
   });
 });
 
