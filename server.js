@@ -313,6 +313,68 @@ app.get('/tyre-pressure', async (req, res) => {
           source: 'Manual guidance',
         };
 
+    if (debug) {
+      response.debug = {
+        dvla: {
+          make: vehicle.make,
+          engineCapacity: vehicle.engineCapacity,
+          wheelplan: vehicle.wheelplan,
+          revenueWeight: vehicle.revenueWeight,
+        },
+        isVan: looksLikeVan(vehicle),
+        candidates: candidates.map((c) => ({
+          model: c.item.model,
+          score: c.score,
+        })),
+      };
+    }
+
+    return res.json(response);
+  } catch (error) {
+    console.error('Tyre pressure lookup failed:', error);
+
+    return res.status(500).json({
+      error: error.message || 'Tyre lookup failed',
+    });
+  }
+});
+
+    const dvlaData = await fetchDvlaVehicle(registration);
+    const vehicle = mapVehicleResponse(registration, dvlaData);
+
+    const candidates = tyreDatabase
+      .map((item) => ({
+        item,
+        score: scoreCandidate(vehicle, item),
+      }))
+      .filter((entry) => entry.score >= 0)
+      .sort((a, b) => b.score - a.score);
+
+    const tyreMatch = findTyreMatch(vehicle);
+
+    const response = tyreMatch
+      ? {
+          registration,
+          vehicleLabel: `${vehicle.make} ${tyreMatch.model}`.trim(),
+          frontPsi: safeValue(tyreMatch.frontPsi),
+          rearPsi: safeValue(tyreMatch.rearPsi),
+          frontBar: safeValue(tyreMatch.frontBar),
+          rearBar: safeValue(tyreMatch.rearBar),
+          loadNote: safeValue(tyreMatch.loadNote),
+          source: safeValue(tyreMatch.source),
+        }
+      : {
+          registration,
+          vehicleLabel: vehicle.make,
+          frontPsi: 'Check vehicle label',
+          rearPsi: 'Check vehicle label',
+          frontBar: 'Door sticker / handbook',
+          rearBar: 'Door sticker / handbook',
+          loadNote:
+            'Exact tyre pressures were not found in the database for this vehicle.',
+          source: 'Manual guidance',
+        };
+
     // 🔥 DEBUG INFO
     if (debug) {
       response.debug = {
