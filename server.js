@@ -64,11 +64,12 @@ function looksLikeVan(vehicle) {
   const wheelplan = safeValue(vehicle.wheelplan, '').toUpperCase();
   const revenueWeight = toNumber(vehicle.revenueWeight);
   const engineCapacity = toNumber(vehicle.engineCapacity);
+  const make = normalizeMake(vehicle.make);
 
-  if (wheelplan.includes('2 AXLE RIGID BODY')) return true;
   if (wheelplan.includes('LIGHT VAN')) return true;
+  if (wheelplan.includes('RIGID BODY')) return true;
   if (revenueWeight !== null && revenueWeight >= 2000) return true;
-  if (engineCapacity !== null && engineCapacity >= 1800 && vehicle.make === 'FORD') {
+  if (make === 'FORD' && engineCapacity !== null && engineCapacity >= 1800) {
     return true;
   }
 
@@ -136,7 +137,7 @@ function mapVehicleResponse(registration, dvlaData) {
   return {
     registration: safeValue(dvlaData.registrationNumber, registration),
     make: safeValue(dvlaData.make),
-    model: 'Model unavailable',
+    model: safeValue(dvlaData.model, 'Model unavailable'),
     yearOfManufacture: year,
     fuelType: safeValue(dvlaData.fuelType),
     engineCapacity: safeValue(dvlaData.engineCapacity),
@@ -193,7 +194,11 @@ function scoreCandidate(vehicle, item) {
   const engineCapacity = toNumber(vehicle.engineCapacity);
   if (engineCapacity !== null) {
     if (engineCapacity >= 1900 && itemModel === 'TRANSIT') score += 10;
-    if (engineCapacity >= 1500 && engineCapacity < 1900 && itemModel.includes('TRANSIT CUSTOM')) {
+    if (
+      engineCapacity >= 1500 &&
+      engineCapacity < 1900 &&
+      itemModel.includes('TRANSIT CUSTOM')
+    ) {
       score += 8;
     }
     if (engineCapacity <= 1600 && itemModel.includes('TRANSIT CONNECT')) {
@@ -222,6 +227,19 @@ function findTyreMatch(vehicle) {
   }
 
   return null;
+}
+
+function getCandidateScores(vehicle) {
+  return tyreDatabase
+    .map((item) => ({
+      model: item.model,
+      make: item.make,
+      yearFrom: item.yearFrom,
+      yearTo: item.yearTo,
+      score: scoreCandidate(vehicle, item),
+    }))
+    .filter((entry) => entry.score >= 0)
+    .sort((a, b) => b.score - a.score);
 }
 
 app.get('/', (req, res) => {
@@ -279,15 +297,6 @@ app.get('/tyre-pressure', async (req, res) => {
 
     const dvlaData = await fetchDvlaVehicle(registration);
     const vehicle = mapVehicleResponse(registration, dvlaData);
-
-    const candidates = tyreDatabase
-      .map((item) => ({
-        item,
-        score: scoreCandidate(vehicle, item),
-      }))
-      .filter((entry) => entry.score >= 0)
-      .sort((a, b) => b.score - a.score);
-
     const tyreMatch = findTyreMatch(vehicle);
 
     const response = tyreMatch
@@ -298,8 +307,11 @@ app.get('/tyre-pressure', async (req, res) => {
           rearPsi: safeValue(tyreMatch.rearPsi),
           frontBar: safeValue(tyreMatch.frontBar),
           rearBar: safeValue(tyreMatch.rearBar),
-          loadNote: safeValue(tyreMatch.loadNote),
-          source: safeValue(tyreMatch.source),
+          loadNote: safeValue(
+            tyreMatch.loadNote,
+            'Check handbook or door label for exact values.'
+          ),
+          source: safeValue(tyreMatch.source, 'Tyre database'),
         }
       : {
           registration,
@@ -309,7 +321,7 @@ app.get('/tyre-pressure', async (req, res) => {
           frontBar: 'Door sticker / handbook',
           rearBar: 'Door sticker / handbook',
           loadNote:
-            'Exact tyre pressures were not found in the database for this vehicle.',
+            'Exact tyre pressures were not found in the database for this vehicle. Check the driver door-jamb sticker, fuel flap label, or vehicle handbook for correct values.',
           source: 'Manual guidance',
         };
 
@@ -317,122 +329,18 @@ app.get('/tyre-pressure', async (req, res) => {
       response.debug = {
         dvla: {
           make: vehicle.make,
+          model: vehicle.model,
+          yearOfManufacture: vehicle.yearOfManufacture,
           engineCapacity: vehicle.engineCapacity,
           wheelplan: vehicle.wheelplan,
           revenueWeight: vehicle.revenueWeight,
         },
         isVan: looksLikeVan(vehicle),
-        candidates: candidates.map((c) => ({
-          model: c.item.model,
-          score: c.score,
-        })),
+        candidates: getCandidateScores(vehicle),
       };
     }
 
     return res.json(response);
-  } catch (error) {
-    console.error('Tyre pressure lookup failed:', error);
-
-    return res.status(500).json({
-      error: error.message || 'Tyre lookup failed',
-    });
-  }
-});
-
-    const dvlaData = await fetchDvlaVehicle(registration);
-    const vehicle = mapVehicleResponse(registration, dvlaData);
-
-    const candidates = tyreDatabase
-      .map((item) => ({
-        item,
-        score: scoreCandidate(vehicle, item),
-      }))
-      .filter((entry) => entry.score >= 0)
-      .sort((a, b) => b.score - a.score);
-
-    const tyreMatch = findTyreMatch(vehicle);
-
-    const response = tyreMatch
-      ? {
-          registration,
-          vehicleLabel: `${vehicle.make} ${tyreMatch.model}`.trim(),
-          frontPsi: safeValue(tyreMatch.frontPsi),
-          rearPsi: safeValue(tyreMatch.rearPsi),
-          frontBar: safeValue(tyreMatch.frontBar),
-          rearBar: safeValue(tyreMatch.rearBar),
-          loadNote: safeValue(tyreMatch.loadNote),
-          source: safeValue(tyreMatch.source),
-        }
-      : {
-          registration,
-          vehicleLabel: vehicle.make,
-          frontPsi: 'Check vehicle label',
-          rearPsi: 'Check vehicle label',
-          frontBar: 'Door sticker / handbook',
-          rearBar: 'Door sticker / handbook',
-          loadNote:
-            'Exact tyre pressures were not found in the database for this vehicle.',
-          source: 'Manual guidance',
-        };
-
-    // 🔥 DEBUG INFO
-    if (debug) {
-      response.debug = {
-        dvla: {
-          make: vehicle.make,
-          engineCapacity: vehicle.engineCapacity,
-          wheelplan: vehicle.wheelplan,
-          revenueWeight: vehicle.revenueWeight,
-        },
-        isVan: looksLikeVan(vehicle),
-        candidates: candidates.map((c) => ({
-          model: c.item.model,
-          score: c.score,
-        })),
-      };
-    }
-
-    return res.json(response);
-  } catch (error) {
-    console.error('Tyre pressure lookup failed:', error);
-
-    return res.status(500).json({
-      error: error.message || 'Tyre lookup failed',
-    });
-  }
-});
-
-    const dvlaData = await fetchDvlaVehicle(registration);
-    const vehicle = mapVehicleResponse(registration, dvlaData);
-    const tyreMatch = findTyreMatch(vehicle);
-
-    if (tyreMatch) {
-      return res.json({
-        registration,
-        vehicleLabel: `${vehicle.make} ${tyreMatch.model}`.trim(),
-        frontPsi: safeValue(tyreMatch.frontPsi),
-        rearPsi: safeValue(tyreMatch.rearPsi),
-        frontBar: safeValue(tyreMatch.frontBar),
-        rearBar: safeValue(tyreMatch.rearBar),
-        loadNote: safeValue(
-          tyreMatch.loadNote,
-          'Check handbook or door label for exact values.'
-        ),
-        source: safeValue(tyreMatch.source, 'Tyre database'),
-      });
-    }
-
-    return res.json({
-      registration,
-      vehicleLabel: vehicle.make,
-      frontPsi: 'Check vehicle label',
-      rearPsi: 'Check vehicle label',
-      frontBar: 'Door sticker / handbook',
-      rearBar: 'Door sticker / handbook',
-      loadNote:
-        'Exact tyre pressures were not found in the database for this vehicle. Check the driver door-jamb sticker, fuel flap label, or vehicle handbook for correct values.',
-      source: 'Manual guidance',
-    });
   } catch (error) {
     const isTimeout = error.name === 'AbortError';
 
