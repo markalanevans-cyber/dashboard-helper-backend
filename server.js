@@ -2,12 +2,25 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const fs = require('fs');
+const path = require('path');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
 app.use(express.json());
+
+let tyreDatabase = [];
+
+try {
+  const tyreDataPath = path.join(__dirname, 'tyreData.json');
+  if (fs.existsSync(tyreDataPath)) {
+    tyreDatabase = JSON.parse(fs.readFileSync(tyreDataPath, 'utf8'));
+  }
+} catch (error) {
+  console.error('Failed to load tyre database:', error.message);
+}
 
 function normalizeRegistration(value) {
   return (value || '')
@@ -29,6 +42,17 @@ function getRegistrationFromRequest(req) {
 function safeValue(value, fallback = 'Unknown') {
   const text = (value ?? '').toString().trim();
   return text.isEmpty ? fallback : text;
+}
+
+function normalizeMake(value) {
+  return safeValue(value, '').toUpperCase();
+}
+
+function normalizeModel(value) {
+  return safeValue(value, '')
+    .toUpperCase()
+    .replace(/\s+/g, ' ')
+    .trim();
 }
 
 async function fetchDvlaVehicle(registration) {
@@ -104,6 +128,35 @@ function mapVehicleResponse(registration, dvlaData) {
   };
 }
 
+function findTyreMatch(vehicle) {
+  const make = normalizeMake(vehicle.make);
+  const year = parseInt(vehicle.yearOfManufacture, 10);
+
+  if (!make || Number.isNaN(year)) return null;
+
+  const exactModelCandidates = tyreDatabase.filter((item) => {
+    return (
+      normalizeMake(item.make) === make &&
+      year >= Number(item.yearFrom || 0) &&
+      year <= Number(item.yearTo || 9999)
+    );
+  });
+
+  if (vehicle.model && vehicle.model !== 'Model unavailable') {
+    const model = normalizeModel(vehicle.model);
+    const exactModel = exactModelCandidates.find(
+      (item) => normalizeModel(item.model) === model
+    );
+    if (exactModel) return exactModel;
+  }
+
+  if (exactModelCandidates.length === 1) {
+    return exactModelCandidates[0];
+  }
+
+  return null;
+}
+
 app.get('/', (req, res) => {
   res.send('Dashboard Helper backend is running');
 });
@@ -113,6 +166,7 @@ app.get('/health', (req, res) => {
     ok: true,
     uptime: Math.round(process.uptime()),
     timestamp: new Date().toISOString(),
+    tyreDatabaseCount: tyreDatabase.length,
   });
 });
 
@@ -145,26 +199,59 @@ async function handleVehicleLookup(req, res) {
 app.get('/vehicle', handleVehicleLookup);
 app.post('/vehicle', handleVehicleLookup);
 
-app.get('/tyre-pressure', (req, res) => {
-  const registration = getRegistrationFromRequest(req);
+app.get('/tyre-pressure', async (req, res) => {
+  try {
+    const registration = getRegistrationFromRequest(req);
 
-  if (!registration) {
-    return res.status(400).json({
-      error: 'Registration is required',
+    if (!registration) {
+      return res.status(400).json({
+        error: 'Registration is required',
+      });
+    }
+
+    const dvlaData = await fetchDvlaVehicle(registration);
+    const vehicle = mapVehicleResponse(registration, dvlaData);
+    const tyreMatch = findTyreMatch(vehicle);
+
+    if (tyreMatch) {
+      return res.json({
+        registration,
+        vehicleLabel: `${vehicle.make} ${tyreMatch.model}`.trim(),
+        frontPsi: safeValue(tyreMatch.frontPsi),
+        rearPsi: safeValue(tyreMatch.rearPsi),
+        frontBar: safeValue(tyreMatch.frontBar),
+        rearBar: safeValue(tyreMatch.rearBar),
+        loadNote: safeValue(
+          tyreMatch.loadNote,
+          'Check handbook or door label for exact values.'
+        ),
+        source: safeValue(tyreMatch.source, 'Tyre database'),
+      });
+    }
+
+    return res.json({
+      registration,
+      vehicleLabel: vehicle.make,
+      frontPsi: 'Check vehicle label',
+      rearPsi: 'Check vehicle label',
+      frontBar: 'Door sticker / handbook',
+      rearBar: 'Door sticker / handbook',
+      loadNote:
+        'Exact tyre pressures were not found in the database for this vehicle. Check the driver door-jamb sticker, fuel flap label, or vehicle handbook for correct values.',
+      source: 'Manual guidance',
+    });
+  } catch (error) {
+    const isTimeout = error.name === 'AbortError';
+
+    console.error('Tyre pressure lookup failed:', error);
+
+    return res.status(isTimeout ? 504 : error.statusCode || 500).json({
+      error: isTimeout
+        ? 'DVLA request timed out'
+        : error.message || 'Tyre lookup failed',
+      details: error.details || error.message || 'Unknown error',
     });
   }
-
-  return res.json({
-    registration,
-    vehicleLabel: registration,
-    frontPsi: 'Check vehicle label',
-    rearPsi: 'Check vehicle label',
-    frontBar: 'Door sticker / handbook',
-    rearBar: 'Door sticker / handbook',
-    loadNote:
-      'Check the driver door-jamb sticker, fuel flap label, or vehicle handbook for correct tyre pressures.',
-    source: 'Manual guidance',
-  });
 });
 
 app.use((req, res) => {
