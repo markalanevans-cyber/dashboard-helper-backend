@@ -55,6 +55,26 @@ function normalizeModel(value) {
     .trim();
 }
 
+function toNumber(value) {
+  const num = Number(value);
+  return Number.isFinite(num) ? num : null;
+}
+
+function looksLikeVan(vehicle) {
+  const wheelplan = safeValue(vehicle.wheelplan, '').toUpperCase();
+  const revenueWeight = toNumber(vehicle.revenueWeight);
+  const engineCapacity = toNumber(vehicle.engineCapacity);
+
+  if (wheelplan.includes('2 AXLE RIGID BODY')) return true;
+  if (wheelplan.includes('LIGHT VAN')) return true;
+  if (revenueWeight !== null && revenueWeight >= 2000) return true;
+  if (engineCapacity !== null && engineCapacity >= 1800 && vehicle.make === 'FORD') {
+    return true;
+  }
+
+  return false;
+}
+
 async function fetchDvlaVehicle(registration) {
   const apiKey = (process.env.DVLA_API_KEY || '').trim();
 
@@ -125,33 +145,80 @@ function mapVehicleResponse(registration, dvlaData) {
     taxStatus: safeValue(dvlaData.taxStatus),
     taxDueDate: safeValue(dvlaData.taxDueDate),
     colour: safeValue(dvlaData.colour),
+    wheelplan: safeValue(dvlaData.wheelplan, ''),
+    revenueWeight: safeValue(dvlaData.revenueWeight, ''),
   };
 }
 
-function findTyreMatch(vehicle) {
-  const make = normalizeMake(vehicle.make);
+function scoreCandidate(vehicle, item) {
+  let score = 0;
   const year = parseInt(vehicle.yearOfManufacture, 10);
+  const make = normalizeMake(vehicle.make);
+  const model = normalizeModel(vehicle.model);
 
-  if (!make || Number.isNaN(year)) return null;
+  if (normalizeMake(item.make) !== make) return -1;
 
-  const exactModelCandidates = tyreDatabase.filter((item) => {
-    return (
-      normalizeMake(item.make) === make &&
-      year >= Number(item.yearFrom || 0) &&
-      year <= Number(item.yearTo || 9999)
-    );
-  });
-
-  if (vehicle.model && vehicle.model !== 'Model unavailable') {
-    const model = normalizeModel(vehicle.model);
-    const exactModel = exactModelCandidates.find(
-      (item) => normalizeModel(item.model) === model
-    );
-    if (exactModel) return exactModel;
+  if (!Number.isNaN(year)) {
+    if (year >= Number(item.yearFrom || 0) && year <= Number(item.yearTo || 9999)) {
+      score += 5;
+    } else {
+      return -1;
+    }
   }
 
-  if (exactModelCandidates.length === 1) {
-    return exactModelCandidates[0];
+  if (model && model !== 'MODEL UNAVAILABLE' && normalizeModel(item.model) === model) {
+    score += 100;
+  }
+
+  const vanLike = looksLikeVan(vehicle);
+  const itemModel = normalizeModel(item.model);
+
+  if (vanLike) {
+    if (itemModel.includes('TRANSIT CUSTOM')) score += 30;
+    if (itemModel === 'TRANSIT') score += 25;
+    if (itemModel.includes('TRANSIT CONNECT')) score += 20;
+    if (itemModel.includes('FIESTA') || itemModel.includes('FOCUS')) score -= 20;
+  } else {
+    if (itemModel.includes('FIESTA') || itemModel.includes('FOCUS')) score += 10;
+    if (itemModel.includes('TRANSIT')) score -= 15;
+  }
+
+  const revenueWeight = toNumber(vehicle.revenueWeight);
+  if (revenueWeight !== null) {
+    if (revenueWeight >= 2500 && itemModel === 'TRANSIT') score += 20;
+    if (revenueWeight >= 2000 && itemModel.includes('TRANSIT CUSTOM')) score += 15;
+    if (revenueWeight < 2000 && itemModel.includes('TRANSIT CONNECT')) score += 15;
+  }
+
+  const engineCapacity = toNumber(vehicle.engineCapacity);
+  if (engineCapacity !== null) {
+    if (engineCapacity >= 1900 && itemModel === 'TRANSIT') score += 10;
+    if (engineCapacity >= 1500 && engineCapacity < 1900 && itemModel.includes('TRANSIT CUSTOM')) {
+      score += 8;
+    }
+    if (engineCapacity <= 1600 && itemModel.includes('TRANSIT CONNECT')) {
+      score += 8;
+    }
+  }
+
+  return score;
+}
+
+function findTyreMatch(vehicle) {
+  const candidates = tyreDatabase
+    .map((item) => ({ item, score: scoreCandidate(vehicle, item) }))
+    .filter((entry) => entry.score >= 0)
+    .sort((a, b) => b.score - a.score);
+
+  if (candidates.length === 0) return null;
+
+  if (candidates.length === 1) return candidates[0].item;
+
+  const best = candidates[0];
+  const second = candidates[1];
+
+  if (best.score >= second.score + 10) {
+    return best.item;
   }
 
   return null;
