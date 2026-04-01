@@ -1,5 +1,6 @@
 require('dotenv').config();
 
+const { logMatchEvent } = require('./services/matchLogger');
 const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
@@ -303,12 +304,68 @@ app.get('/tyre-pressure', async (req, res) => {
     const match = matchTyrePressure(vehicle, debug);
 
     const confidence = buildConfidenceResult({
-    score: match.score,
+   
+      score: match.score,
     reasons: match.reasons,
     warnings: match.warnings,
     topScore: match.topScore,
     secondScore: match.secondScore,
 });
+
+if (match.needsModelSelection) {
+  logMatchEvent({
+    type: 'model_selection_required',
+    registration,
+    vehicle: {
+      make: vehicle.make,
+      model: vehicle.model,
+      yearOfManufacture: vehicle.yearOfManufacture,
+      fuelType: vehicle.fuelType,
+      engineCapacity: vehicle.engineCapacity,
+      wheelplan: vehicle.wheelplan,
+      revenueWeight: vehicle.revenueWeight,
+    },
+    modelOptions: match.modelOptions,
+    matchScore: confidence.matchScore,
+    confidenceLabel: confidence.confidenceLabel,
+  });
+} else if (!match.tyrePressure) {
+  logMatchEvent({
+    type: 'no_match_found',
+    registration,
+    vehicle: {
+      make: vehicle.make,
+      model: vehicle.model,
+      yearOfManufacture: vehicle.yearOfManufacture,
+      fuelType: vehicle.fuelType,
+      engineCapacity: vehicle.engineCapacity,
+      wheelplan: vehicle.wheelplan,
+      revenueWeight: vehicle.revenueWeight,
+    },
+    matchScore: confidence.matchScore,
+    confidenceLabel: confidence.confidenceLabel,
+    warnings: match.warnings,
+  });
+} else if (confidence.confidenceLabel === 'low' || confidence.confidenceLabel === 'medium') {
+  logMatchEvent({
+    type: 'low_or_medium_confidence_match',
+    registration,
+    vehicle: {
+      make: vehicle.make,
+      model: vehicle.model,
+      yearOfManufacture: vehicle.yearOfManufacture,
+      fuelType: vehicle.fuelType,
+      engineCapacity: vehicle.engineCapacity,
+      wheelplan: vehicle.wheelplan,
+      revenueWeight: vehicle.revenueWeight,
+    },
+    matchedVehicle: match.matchedVehicle,
+    tyrePressure: match.tyrePressure,
+    matchScore: confidence.matchScore,
+    confidenceLabel: confidence.confidenceLabel,
+    warnings: match.warnings,
+  });
+}
 
     return res.json({
     registration,
@@ -339,6 +396,48 @@ app.get('/tyre-pressure', async (req, res) => {
         : error.message || 'Tyre lookup failed',
       details: error.details || error.message || 'Unknown error',
     });
+  }
+});
+
+app.post('/model-selection', (req, res) => {
+  try {
+    const registration = normalizeRegistration(req.body.registration || '');
+    const selectedModelId = String(req.body.selectedModelId || '').trim();
+    const selectedLabel = String(req.body.selectedLabel || '').trim();
+
+    if (!registration || !selectedModelId) {
+      return res.status(400).json({
+        error: 'registration and selectedModelId are required',
+      });
+    }
+
+    logMatchEvent({
+      type: 'user_selected_model',
+      registration,
+      selectedModelId,
+      selectedLabel,
+    });
+
+    return res.json({ ok: true });
+  } catch (error) {
+    console.error('Failed to save model selection:', error);
+    return res.status(500).json({ error: 'Failed to save model selection' });
+  }
+});
+
+app.get('/match-logs', (req, res) => {
+  try {
+    const logPath = path.join(__dirname, 'matchLogs.json');
+
+    if (!fs.existsSync(logPath)) {
+      return res.json([]);
+    }
+
+    const logs = JSON.parse(fs.readFileSync(logPath, 'utf8'));
+    return res.json(logs);
+  } catch (error) {
+    console.error('Failed to read match logs:', error);
+    return res.status(500).json({ error: 'Failed to read match logs' });
   }
 });
 
