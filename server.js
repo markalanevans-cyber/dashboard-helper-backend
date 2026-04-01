@@ -4,6 +4,8 @@ const express = require('express');
 const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
+const { matchTyrePressure } = require('./services/tyreMatcher');
+const { buildConfidenceResult } = require('./services/confidence');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -41,7 +43,7 @@ function getRegistrationFromRequest(req) {
 
 function safeValue(value, fallback = 'Unknown') {
   const text = (value ?? '').toString().trim();
-  return text.isEmpty ? fallback : text;
+  return text === '' ? fallback : text;
 }
 
 function normalizeMake(value) {
@@ -297,50 +299,35 @@ app.get('/tyre-pressure', async (req, res) => {
 
     const dvlaData = await fetchDvlaVehicle(registration);
     const vehicle = mapVehicleResponse(registration, dvlaData);
-    const tyreMatch = findTyreMatch(vehicle);
 
-    const response = tyreMatch
-      ? {
-          registration,
-          vehicleLabel: `${vehicle.make} ${tyreMatch.model}`.trim(),
-          frontPsi: safeValue(tyreMatch.frontPsi),
-          rearPsi: safeValue(tyreMatch.rearPsi),
-          frontBar: safeValue(tyreMatch.frontBar),
-          rearBar: safeValue(tyreMatch.rearBar),
-          loadNote: safeValue(
-            tyreMatch.loadNote,
-            'Check handbook or door label for exact values.'
-          ),
-          source: safeValue(tyreMatch.source, 'Tyre database'),
-        }
-      : {
-          registration,
-          vehicleLabel: vehicle.make,
-          frontPsi: 'Check vehicle label',
-          rearPsi: 'Check vehicle label',
-          frontBar: 'Door sticker / handbook',
-          rearBar: 'Door sticker / handbook',
-          loadNote:
-            'Exact tyre pressures were not found in the database for this vehicle. Check the driver door-jamb sticker, fuel flap label, or vehicle handbook for correct values.',
-          source: 'Manual guidance',
-        };
+    const match = matchTyrePressure(vehicle, debug);
 
-    if (debug) {
-      response.debug = {
-        dvla: {
-          make: vehicle.make,
-          model: vehicle.model,
-          yearOfManufacture: vehicle.yearOfManufacture,
-          engineCapacity: vehicle.engineCapacity,
-          wheelplan: vehicle.wheelplan,
-          revenueWeight: vehicle.revenueWeight,
-        },
-        isVan: looksLikeVan(vehicle),
-        candidates: getCandidateScores(vehicle),
-      };
-    }
+    const confidence = buildConfidenceResult({
+    score: match.score,
+    reasons: match.reasons,
+    warnings: match.warnings,
+    topScore: match.topScore,
+    secondScore: match.secondScore,
+});
 
-    return res.json(response);
+    return res.json({
+    registration,
+    vehicle,
+    matchedVehicle: match.matchedVehicle,
+    tyrePressure: confidence.fallbackUsed ? null : match.tyrePressure,
+    estimatedTyrePressure: confidence.fallbackUsed ? match.tyrePressure : null,
+    matchScore: confidence.matchScore,
+    matchConfidence: confidence.matchConfidence,
+    confidenceLabel: confidence.confidenceLabel,
+    matchReason: confidence.matchReason,
+    fallbackUsed: confidence.fallbackUsed,
+    needsModelSelection: match.needsModelSelection,
+    modelOptions: match.modelOptions,
+    verificationHint:
+    'Check the driver door frame, fuel flap, or owner manual to confirm.',
+    warnings: match.warnings,
+    debug: debug ? match.debug : undefined,
+});
   } catch (error) {
     const isTimeout = error.name === 'AbortError';
 

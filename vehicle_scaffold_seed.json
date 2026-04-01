@@ -1,0 +1,256 @@
+[
+  {
+    "make": "FORD",
+    "models": [
+      { "model": "FIESTA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2023 },
+      { "model": "FOCUS", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "MONDEO", "bodyType": "car", "yearFrom": 2015, "yearTo": 2022 },
+      { "model": "KUGA", "bodyType": "suv", "yearFrom": 2016, "yearTo": 2024 },
+      { "model": "PUMA", "bodyType": "suv", "yearFrom": 2020, "yearTo": 2024 },
+      { "model": "ECOSPORT", "bodyType": "suv", "yearFrom": 2016, "yearTo": 2023 },
+      { "model": "S-MAX", "bodyType": "mpv", "yearFrom": 2015, "yearTo": 2023 },
+      { "model": "GALAXY", "bodyType": "mpv", "yearFrom": 2015, "yearTo": 2023 },
+      { "model": "TRANSIT", "bodyType": "van", "yearFrom": 2014, "yearTo": 2024 },
+      { "model": "TRANSIT CUSTOM", "bodyType": "van", "yearFrom": 2016, "yearTo": 2024 },
+      { "model": "TRANSIT CONNECT", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "TRANSIT COURIER", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "RANGER", "bodyType": "pickup", "yearFrom": 2016, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "VAUXHALL",
+    "models": [
+      { "model": "CORSA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "ASTRA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "INSIGNIA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2022 },
+      { "model": "MOKKA", "bodyType": "suv", "yearFrom": 2016, "yearTo": 2024 },
+      { "model": "CROSSLAND", "bodyType": "suv", "yearFrom": 2017, "yearTo": 2024 },
+      { "model": "GRANDLAND", "bodyType": "suv", "yearFrom": 2018, "yearTo": 2024 },
+      { "model": "COMBO", "bodyType": "van", "yearFrom": 2016, "yearTo": 2024 },
+      { "model": "VIVARO", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "MOVANO", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "VOLKSWAGEN",
+    "models": [
+      { "model": "POLO", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "GOLF", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "PASSAT", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "UP", "bodyType": "car", "yearFrom": 2015, "yearTo": 2023 },
+      { "model": "T-ROC", "bodyType": "suv", "yearFrom": 2018, "yearTo": 2024 },
+      { "model": "T-CROSS", "bodyType": "suv", "yearFrom": 2019, "yearTo": 2024 },
+      { "model": "TIGUAN", "bodyType": "suv", "yearFrom": 2016, "yearTo": 2024 },
+      { "model": "TOUAREG", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CADDY", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "TRANSPORTER", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CRAFTER", "bodyType": "van", "yearFrom": 2016, "yearTo": 2024 },
+      { "model": "AMAROK", "bodyType": "pickup", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "BMW",
+    "models": [
+      { "model": "1 SERIES", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "2 SERIES", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "3 SERIES", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "4 SERIES", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "5 SERIES", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "X1", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "X2", "bodyType": "suv", "yearFrom": 2018, "yearTo": 2024 },
+      { "model": "X3", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "X5", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "AUDI",
+    "models": [
+      { "model": "A1", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "A3", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "A4", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "A5", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "A6", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "Q2", "bodyType": "suv", "yearFrom": 2017, "yearTo": 2024 },
+      { "model": "Q3", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "Q5", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "Q7", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "MERCEDES-BENZ",
+    "models": [
+      { "model": "A CLASS", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "B CLASS", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "C CLASS", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "E CLASS", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CLA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "GLA", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "GLB", "bodyType": "suv", "yearFrom": 2020, "yearTo": 2024 },
+      { "model": "GLC", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "SPRINTER", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "VITO", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CITAN", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "TOYOTA",
+    "models": [
+      { "model": "AYGO", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "YARIS", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "COROLLA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "PRIUS", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "C-HR", "bodyType": "suv", "yearFrom": 2017, "yearTo": 2024 },
+      { "model": "RAV4", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "HILUX", "bodyType": "pickup", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "PROACE CITY", "bodyType": "van", "yearFrom": 2020, "yearTo": 2024 },
+      { "model": "PROACE", "bodyType": "van", "yearFrom": 2016, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "NISSAN",
+    "models": [
+      { "model": "MICRA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2023 },
+      { "model": "NOTE", "bodyType": "car", "yearFrom": 2015, "yearTo": 2021 },
+      { "model": "JUKE", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "QASHQAI", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "X-TRAIL", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "NAVARA", "bodyType": "pickup", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "NV200", "bodyType": "van", "yearFrom": 2015, "yearTo": 2023 },
+      { "model": "PRIMASTAR", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "INTERSTAR", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "PEUGEOT",
+    "models": [
+      { "model": "108", "bodyType": "car", "yearFrom": 2015, "yearTo": 2022 },
+      { "model": "208", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "308", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "508", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "2008", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "3008", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "5008", "bodyType": "suv", "yearFrom": 2017, "yearTo": 2024 },
+      { "model": "PARTNER", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "EXPERT", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "BOXER", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "CITROEN",
+    "models": [
+      { "model": "C1", "bodyType": "car", "yearFrom": 2015, "yearTo": 2022 },
+      { "model": "C3", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "C4", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "C5 AIRCROSS", "bodyType": "suv", "yearFrom": 2019, "yearTo": 2024 },
+      { "model": "BERLINGO", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "DISPATCH", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "RELAY", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "RENAULT",
+    "models": [
+      { "model": "CLIO", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "MEGANE", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CAPTUR", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "KADJAR", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2023 },
+      { "model": "ARKANA", "bodyType": "suv", "yearFrom": 2021, "yearTo": 2024 },
+      { "model": "KANGOO", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "TRAFIC", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "MASTER", "bodyType": "van", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "HYUNDAI",
+    "models": [
+      { "model": "I10", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "I20", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "I30", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "KONA", "bodyType": "suv", "yearFrom": 2018, "yearTo": 2024 },
+      { "model": "TUCSON", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "SANTA FE", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "KIA",
+    "models": [
+      { "model": "PICANTO", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "RIO", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CEED", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "STONIC", "bodyType": "suv", "yearFrom": 2018, "yearTo": 2024 },
+      { "model": "NIRO", "bodyType": "suv", "yearFrom": 2017, "yearTo": 2024 },
+      { "model": "SPORTAGE", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "SORENTO", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "SKODA",
+    "models": [
+      { "model": "CITIGO", "bodyType": "car", "yearFrom": 2015, "yearTo": 2022 },
+      { "model": "FABIA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "SCALA", "bodyType": "car", "yearFrom": 2019, "yearTo": 2024 },
+      { "model": "OCTAVIA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "SUPERB", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "KAMIQ", "bodyType": "suv", "yearFrom": 2020, "yearTo": 2024 },
+      { "model": "KAROQ", "bodyType": "suv", "yearFrom": 2018, "yearTo": 2024 },
+      { "model": "KODIAQ", "bodyType": "suv", "yearFrom": 2017, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "SEAT",
+    "models": [
+      { "model": "MII", "bodyType": "car", "yearFrom": 2015, "yearTo": 2021 },
+      { "model": "IBIZA", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "LEON", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "ARONA", "bodyType": "suv", "yearFrom": 2018, "yearTo": 2024 },
+      { "model": "ATECA", "bodyType": "suv", "yearFrom": 2017, "yearTo": 2024 },
+      { "model": "TARRACO", "bodyType": "suv", "yearFrom": 2019, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "HONDA",
+    "models": [
+      { "model": "JAZZ", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CIVIC", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "HR-V", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CR-V", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "MAZDA",
+    "models": [
+      { "model": "MAZDA2", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "MAZDA3", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "MAZDA6", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CX-3", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2023 },
+      { "model": "CX-30", "bodyType": "suv", "yearFrom": 2020, "yearTo": 2024 },
+      { "model": "CX-5", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "LAND ROVER",
+    "models": [
+      { "model": "RANGE ROVER EVOQUE", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "DISCOVERY SPORT", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "DEFENDER", "bodyType": "suv", "yearFrom": 2020, "yearTo": 2024 },
+      { "model": "DISCOVERY", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "RANGE ROVER SPORT", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "MINI",
+    "models": [
+      { "model": "HATCH", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "CLUBMAN", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "COUNTRYMAN", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 }
+    ]
+  },
+  {
+    "make": "DACIA",
+    "models": [
+      { "model": "SANDERO", "bodyType": "car", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "DUSTER", "bodyType": "suv", "yearFrom": 2015, "yearTo": 2024 },
+      { "model": "JOGGER", "bodyType": "mpv", "yearFrom": 2022, "yearTo": 2024 }
+    ]
+  }
+]
